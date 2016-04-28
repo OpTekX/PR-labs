@@ -1,0 +1,152 @@
+\documentclass[journal]{IEEEtran}
+
+% Packages
+\usepackage{cite}
+\usepackage{graphicx}
+\usepackage{subfigure}
+\usepackage{float}
+\usepackage{url}
+\usepackage{color}
+\usepackage[]{algorithm2e}
+\usepackage{amsmath}
+
+\begin{document}
+
+% paper title
+% can use linebreaks \\ within to get better formatting as desired
+\title{Probabilistic~Robotics~Prelab~4 \\ Extended~Kalman~Filter}
+%
+
+\author{Rodrigo~Caye~Daudt}
+
+
+
+
+
+% make the title area
+\maketitle
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Transforming From World Coordinates To Robot Coordinates}\label{aaa}
+
+\IEEEPARstart{T}{he} transformations that can be used to obtain $(\rho_r,\phi_r)$ from $(\rho_w,\phi_w)$ given the robot's position $(x_r,y_r,\theta)$ are described below. When programming, the \textit{angle\_wrap} function should be used after the final calculation of $\phi_r$.
+
+\begin{algorithm}
+$\rho_r ' = \rho_w - x_r cos\phi_w - y_r sin \phi_w$\;
+$\phi_r ' = \phi_w - \theta$\;
+\eIf{$\rho_r ' >= 0$}{
+$\rho_r = \rho_r '$\;
+$\phi_r = \phi_r '$\;
+}{
+$\rho_r = -\rho_r '$\;
+$\phi_r = \phi_r ' + \Pi$\;
+}
+\end{algorithm}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Measurement Equations And Jacobian H}
+
+The system's state $x$ is defined as the following vector:
+
+\[
+x = 
+\begin{bmatrix}
+x_r \\
+y_r \\
+\theta
+\end{bmatrix}
+\]
+
+And the model we will use for the system dynamics is:
+
+\[
+\hat{x_k} = 
+\begin{bmatrix}
+\hat{x}_{r_{k-1}} + (\Delta x + w_x) \cdot cos \theta_{k-1} - (\Delta y + w_y) \cdot sin \theta_{k-1} \\
+\hat{y}_{r_{k-1}} + (\Delta x + w_x) \cdot sin \theta_{k-1} + (\Delta y + w_y) \cdot cos \theta_{k-1} \\
+\theta_{k-1} + (\Delta \theta + w_\theta)
+\end{bmatrix}
+\]
+
+With the model above we can calculate the $A_k$ and $W_k$ matrices to be used for the EKF:
+
+\[
+A_k = 
+\begin{bmatrix}
+1 & 0 & -\Delta x\cdot sin \theta_{k-1} - \Delta y \cdot cos \theta_{k-1} \\
+0 & 1 & \Delta x\cdot cos \theta_{k-1} - \Delta y \cdot sin \theta_{k-1} \\
+0 & 0 & 1 \\
+\end{bmatrix}
+\]
+
+\[
+W_k = 
+\begin{bmatrix}
+cos \theta_{k-1} & -sin \theta_{k-1} & 0 \\
+sin \theta_{k-1} & cos \theta_{k-1} & 0 \\
+0 & 0 & 1 \\
+\end{bmatrix}
+\]
+
+As was stated in Section \ref{aaa}, our definition of $h(x_k,v_k)$ has to be split in two cases. The case for $\rho_r ' = 0$ since be treated with care since wither case could be valid.
+
+\newpage
+
+If $\rho_r ' >= 0$:
+
+\[
+h(x_k,v_k) = 
+\begin{bmatrix}
+\rho_r + v_\rho \\
+\phi_r + v_\phi
+\end{bmatrix}
+=
+\begin{bmatrix}
+\rho_w - x_r cos\phi_w - y_r sin \phi_w + v_\rho \\
+\phi_w - \theta + v_\phi
+\end{bmatrix}
+\]
+
+\[
+H_k = 
+\begin{bmatrix}
+-cos\phi_w & -sin \phi_w & 0 \\
+0 & 0 & -1
+\end{bmatrix}
+\]
+
+Else:
+
+\[
+h(x_k,v_k) = 
+\begin{bmatrix}
+\rho_r + v_\rho \\
+\phi_r + v_\phi
+\end{bmatrix}
+=
+\begin{bmatrix}
+-\rho_w + x_r cos\phi_w + y_r sin \phi_w + v_\rho \\
+\phi_w - \theta + \Pi + v_\phi
+\end{bmatrix}
+\]
+
+\[
+H_k = 
+\begin{bmatrix}
+cos\phi_w & sin \phi_w & 0 \\
+0 & 0 & -1
+\end{bmatrix}
+\]
+
+
+%\bibliographystyle{IEEEtran}
+%\bibliography{Template_Daudt}
+
+
+\end{document}
+
+

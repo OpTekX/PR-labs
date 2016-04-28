@@ -1,0 +1,179 @@
+%\documentclass[journal]{IEEEtran}
+\documentclass{article}
+
+% Packages
+\usepackage{cite}
+\usepackage{graphicx}
+\usepackage{subfigure}
+\usepackage{float}
+\usepackage{url}
+\usepackage{color}
+\usepackage{amsmath}
+
+
+\begin{document}
+
+% paper title
+% can use linebreaks \\ within to get better formatting as desired
+\title{Probabilistic~Robotics~Exercise~1}
+%
+
+\author{Rodrigo~Caye~Daudt}
+
+
+
+
+
+% make the title area
+\maketitle
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Problem Description}
+
+A robot manipulator is equipped with a tactile sensor in its gripper. When the robot is commanded to grasp an object, if the object was not already grasped it succeeds with 0.7 probabilities but fails with a 0.3 probability, otherwise it continues grasping the object with 0.9 probability but can fail with 0.1 probability.
+Whenever an object is hold within the gripper, the tactile sensor detects the situation with a 0.6 probability but fails in the detection with a 0.4 probability.
+If the gripper is free, the tactile sensor detects the situation with 0.8 probability but fails with 0.2 probability.
+
+The following sequence of actions/sensor readings have been executed:
+
+1) The action GRASP is executed
+
+2) The tactile sensor detects NO OBJECT GRASPED.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Solution}
+
+From the problem description we can organize the information as follows:
+
+\textbf{State transition probabilities:}
+
+\[
+p(X_t=ObjectGrasped|U_t=Grasp, X_{t-1}=NoObjectGrasped) = 0.7
+\]
+\[
+p(X_t=NoObjectGrasped|U_t=Grasp, X_{t-1}=NoObjectGrasped) = 0.3
+\]
+\[
+p(X_t=ObjectGrasped|U_t=Grasp, X_{t-1}=ObjectGrasped) = 0.9
+\]
+\[
+p(X_t=NoObjectGrasped|U_t=Grasp, X_{t-1}=ObjectGrasped) = 0.1
+\]
+
+
+\textbf{Measurement probabilities:}
+
+\[
+p(Z_t=ObjectGrasped|X_t=ObjectGrasped) = 0.6
+\]
+
+\[
+p(Z_t=NoObjectGrasped|X_t=ObjectGrasped) = 0.4
+\]
+
+\[
+p(Z_t=ObjectGrasped|X_t=NoObjectGrasped) = 0.2
+\]
+
+\[
+p(Z_t=NoObjectGrasped|X_t=NoObjectGrasped) = 0.8
+\]
+
+\textbf{Initial belief:}
+
+\[
+bel(X_0=ObjectGrasped) = 0.5
+\]
+
+\[
+bel(X_0=NoObjectGrasped) = 0.5
+\]
+
+\subsection{Prediction}
+
+In this step we should apply the prediction step of the Bayes filter to calculate the new belief predictions, given that $U_1=Grasp$.
+
+
+\begin{align*}
+\overline{bel}(&X_1=ObjectGrasped) = bel(X_0=ObjectGrasped) \\
+			&\cdot p(X_t=ObjectGrasped|U_t=Grasp, X_{t-1}=ObjectGrasped) \\
+			&+ bel(X_0=NoObjectGrasped) \\
+			&\cdot p(X_t=ObjectGrasped|U_t=Grasp, X_{t-1}=NoObjectGrasped)\\
+			&=0.5 \cdot 0.9 + 0.5 \cdot 0.7 = 0.8
+\end{align*}
+
+\begin{align*}
+\overline{bel}(&X_1=NoObjectGrasped) = bel(X_0=ObjectGrasped) \\
+			&\cdot p(X_t=NoObjectGrasped|U_t=Grasp, X_{t-1}=ObjectGrasped) \\
+			&+ bel(X_0=NoObjectGrasped) \\
+			&\cdot p(X_t=NoObjectGrasped|U_t=Grasp, X_{t-1}=NoObjectGrasped)\\
+			&=0.5 \cdot 0.1 + 0.5 \cdot 0.3 = 0.2
+\end{align*}
+
+
+\subsection{Correction}
+
+Then, we apply the correction step of the Bayes filter considering we obtained a measurement $Z_1=NoObjectGrasped$:
+
+\begin{align*}
+bel(X_1&=ObjectGrasped) = \\
+					&\eta \cdot p(Z_t=NoObjectGrasped|X_t=ObjectGrasped)\\
+					& \cdot  \overline{bel}(X_1=ObjectGrasped)\\
+					& = \eta \cdot 0.4 \cdot 0.8\\
+					& = \eta \cdot 0.32
+\end{align*}
+
+\begin{align*}
+bel(X_1&=NoObjectGrasped) = \\
+					& \eta \cdot p(Z_t=NoObjectGrasped|X_t=NoObjectGrasped)\\
+					& \cdot  \overline{bel}(X_1=NoObjectGrasped)\\
+					& = \eta \cdot 0.8 \cdot 0.2\\
+					& = \eta \cdot 0.16
+\end{align*}
+
+We then calculate $\eta$:
+
+\begin{align*}
+\eta &= \frac{1}{\frac{bel(X_1=ObjectGrasped)}{\eta} + \frac{bel(X_1=NoObjectGrasped)}{\eta}}\\
+	& = \frac{1}{0.32 + 0.16} = \frac{1}{0.48}
+\end{align*}
+
+Therefore:
+
+\[
+bel(X_1=ObjectGrasped) = \frac{2}{3}
+\]
+
+
+\[
+bel(X_1=NoObjectGrasped) = \frac{1}{3}
+\]
+
+
+\subsection{Final Results}
+
+The table can then be filled as follows:
+
+\hspace{5pt}
+
+\begin{tabular}{l | r  r}
+Executed & Probability & Probability\\
+Action & Object Grasped & No Object Grasped\\
+\hline
+$U_t = Grasp$ & 0.8 & 0.2 \\
+$Z_t = NoObjectGrasped$ & 0.667 & 0.333 
+\end{tabular}
+
+
+
+
+
+%\bibliographystyle{IEEEtran}
+%\bibliography{Template_Daudt}
+
+
+\end{document}
+
+
